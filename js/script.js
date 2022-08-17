@@ -1,7 +1,9 @@
 
   let board = [];
-  let display ;
-const gameboard = (function () {
+  chooseOpponent();
+  let opponent;
+  // Game board object
+  const gameboard = (function () {
   const container = document.querySelector('#gameboard');
   function fillGameBoard () { 
     container.innerHTML = '';
@@ -12,17 +14,18 @@ const gameboard = (function () {
     }
   }
 
-  function mark(element,player) {
-    if(element.textContent === '' ) {
-      board[element.dataset.index] = player.getChar();
-      element.textContent = player.getChar();
+  function mark(number,player) {
+    let li = document.querySelector(`li[data-index="${number}"]`);
+    if(li.textContent === '' ) {
+      board[number] = player.getChar();
+      li.textContent = player.getChar();
       return true;
     }
     return false;
   }
   return {fillGameBoard,mark};
 })();
-
+// player Object
 function player(name,char,color='black',wins=0) { 
 
   function getChar() {
@@ -38,9 +41,27 @@ function player(name,char,color='black',wins=0) {
     wins
   };
 }
+// End player object
+/* Start computer player */
+let computer  = (function (name,char) { 
+  let wins =0;
+  char = 'O';
+  function getName() {
+    return name;
+  }
+  function getChar() { 
+    return char;
+  }
+  function playTurn() { 
+    let random = Math.floor(Math.random() *(8+1));
+    return random;
+  }
+  return {getName,getChar,playTurn,wins}; 
+})();
+/* End computer player */
 let player1 = player('player1','X',"rgb(42, 26, 189)");
 let player2 = player('player2','O',"rgb(235, 152, 0)");
-
+// game object 
 const game = (function () {
   let counter = -1;
   function checkWinner() {
@@ -71,26 +92,41 @@ const game = (function () {
     } 
     return -1;
   }
-  function play(e,player1,player2) {
+  function playWithComputer(index) {
     
-        if(counter % 2 === 0 ) { 
-          if(gameboard.mark(e.target,player1)) {
+          if(gameboard.mark(index,player1)) {
             counter++;
-            
-            endGame();
+            if(endGame()) 
+              return;
+              while(true) { 
+                if(gameboard.mark(computer.playTurn(),computer)) { 
+                  counter++;
+                  endGame();
+                  break;
+                }
           }
-        }
-        else if(counter % 2 !== 0) {
-          if(gameboard.mark(e.target,player2)) {
-            counter++;
-            endGame();
           }
-        }
+  }
+  function play(index) {
+    if(counter % 2 === 0) {
+      if(gameboard.mark(index,player1)) { 
+        counter++;
+        endGame();
+      }
+    }
+    else if(counter % 2 !== 0 ) { 
+      if(gameboard.mark(index,player2)) { 
+        counter++;
+        endGame();
+      }
+    }
+    
   }
     function endGame() { 
       let winner = checkWinner();
+      console.log(winner);
       if(winner >= 0) {
-        counter = -1; 
+        resetCounter(); 
         let template = document.querySelector('template').content;
         let container = template.querySelector('.gameOver').cloneNode(true);
         
@@ -99,12 +135,14 @@ const game = (function () {
         let h3 = container.querySelector('h3');
         incrementScore(winner);
         h3.textContent =  winner === 0 ? "Tie State" :
-                          winner === 1 ? `${player1.getName()} has beaten ${player2.getName()}` :
-                          `${player2.getName()} has beaten ${player1.getName()}`;
+        winner === 1 ? `${player1.getName()} has beaten ${player2.getName()}` :
+        `${player2.getName()} has beaten ${player1.getName()}`;
         document.body.className = 'hide';
         container.dataset.copy = 'true';
         document.body.appendChild(container);
+        return 1;
       } 
+      return;
   }
   function incrementScore(result) { 
     let player1result = document.querySelector(".result p.player1");
@@ -117,30 +155,59 @@ const game = (function () {
     player1result.textContent = `${player1.wins}`;
     player2result.textContent = `${player2.wins}`;
   }
-  return {play};
+  function resetCounter() { 
+    counter = -1;
+  }
+  return {playWithComputer,play,resetCounter};
 })();
+
+// Start Event Listeners
 gameboard.fillGameBoard();  
+
 document.addEventListener('click',function(e) { 
   if(e.target.dataset.index !== undefined ) {
-    game.play(e,player1,player2);
+    let index = e.target.dataset.index;
+    //choose which player to play with depent on player choice
+    if(opponent) { 
+      game.playWithComputer(index);
+    }
+    else {
+      game.play(index);
+    }
   }
 });
+
 document.addEventListener('click',function(e) { 
   if(e.target.className === 'playAgain') { 
     document.body.setAttribute('class','');
     board = [];
+    game.resetCounter();
     e.target.parentNode.remove();
     gameboard.fillGameBoard();
   }
 });
+
 const restart = document.querySelector('.restart');
 restart.addEventListener('click', function() {
   gameboard.fillGameBoard();
-  board =[];
+  board = [];
+  game.resetCounter();
 });
 
-/* Start computer playing */
-let computer  = (function () { 
-  
-})();
-/* End computer playing */
+// Choose your opponent 
+function chooseOpponent() {
+  const template = document.querySelector('template.menu-template').content;
+  const container = template.cloneNode(true);
+  const input = container.querySelector('form input');
+  isChecked = input.checked;
+  document.body.appendChild(container);
+  document.body.className = 'hide';
+} 
+document.addEventListener('submit',function(e) {
+  if(e.target.className = "start") { 
+    e.preventDefault();
+    document.body.setAttribute('class','');
+    opponent = e.target.querySelector('input').checked;
+    e.target.parentNode.remove();
+  }
+},);

@@ -174,3 +174,29 @@ div.gameOver button {
   border: none;
 }
 /* End Game Over */
+
+/* Start the Start menu */
+.container form { 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  color: white;
+  gap: 20px;
+  z-index: 10;
+}
+.container form button { 
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: none;
+  color: white;
+  background-color: purple;
+}
+.container form h1 { 
+  text-align: center;
+}
+/* End the Start menu */

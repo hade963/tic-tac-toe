@@ -27,13 +27,25 @@
     </ul>
   </div>
 </main>
-  <script src="js/script.js"></script>  
+  <script src="js/script.js" defer></script>  
   <template>
     <div class="gameOver">
       <h2>Game Over</h2>
       <h3></h3>
       <button class="playAgain">Play Again</button>
     </div>
+  </template>
+  <template class="menu-template">
+    <div class="container">
+        <form action="" class="start">
+          <h1 for="opponent">Choose your Opponent</h1>
+          <label for="opponent">
+            <input type="checkbox" name="opponent" id="opponent"> computer / 2players
+          </label>
+          
+          <button  class="startbtn">Start Game</button>
+        </form>
+      </div>
   </template>
 </body>
 </html>
