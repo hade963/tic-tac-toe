@@ -1,7 +1,9 @@
+let board = [];
+chooseOpponent();
+let opponent;
 
-  let board = [];
-  chooseOpponent();
-  let opponent;
+let player1 = player('player1','O');
+let player2 = player('player2','X');
   // Game board object
   const gameboard = (function () {
   const container = document.querySelector('#gameboard');
@@ -9,6 +11,7 @@
     container.innerHTML = '';
     for(let i=0;i<9;i++) {
       let li = document.createElement('li');
+      board[i] = i;
       li.dataset.index = i;
       container.appendChild(li);
     }
@@ -26,7 +29,7 @@
   return {fillGameBoard,mark};
 })();
 // player Object
-function player(name,char,color='black',wins=0) { 
+function player(name,char,wins=0) { 
 
   function getChar() {
     return char;
@@ -37,75 +40,50 @@ function player(name,char,color='black',wins=0) {
   return {
     getChar,
     getName,
-    color,
     wins
   };
 }
 // End player object
+
 /* Start computer player */
 let computer  = (function (name,char) { 
-  let wins =0;
-  char = 'O';
+  let wins = 0;
+  char = 'X';
+  name = 'computer';
   function getName() {
     return name;
   }
   function getChar() { 
     return char;
   }
-  function playTurn() { 
-    let random = Math.floor(Math.random() *(8+1));
-    return random;
-  }
-  return {getName,getChar,playTurn,wins}; 
+  return {getChar,wins,getEmptyIndexes,getName};
 })();
 /* End computer player */
-let player1 = player('player1','X',"rgb(42, 26, 189)");
-let player2 = player('player2','O',"rgb(235, 152, 0)");
 // game object 
 const game = (function () {
   let counter = -1;
-  function checkWinner() {
-      if (( board[0] === 'X' && board[1] === 'X' && board[2]==='X') ||
-          ( board[3] === 'X' && board[4] === 'X' && board[5]==='X') || 
-          ( board[6] === 'X' && board[7] === 'X' && board[8]==='X') ||
-          ( board[0] === 'X' && board[3] === 'X' && board[6]==='X') ||
-          ( board[1] === 'X' && board[4] === 'X' && board[7]==='X') ||
-          ( board[2] === 'X' && board[5] === 'X' && board[8]==='X') ||
-          ( board[0] === 'X' && board[4] === 'X' && board[8]==='X') ||
-          ( board[2] === 'X' && board[4] === 'X' && board[6]==='X')) { 
-      return 1;
-    }
-
-    else  if((board[0] === 'O' && board[1] === 'O' && board[2]==='O') ||
-            ( board[3] === 'O' && board[4] === 'O' && board[5]==='O') || 
-            ( board[6] === 'O' && board[7] === 'O' && board[8]==='O') ||
-            ( board[0] === 'O' && board[3] === 'O' && board[6]==='O') ||
-            ( board[1] === 'O' && board[4] === 'O' && board[7]==='O') ||
-            ( board[2] === 'O' && board[5] === 'O' && board[8]==='O') ||
-            ( board[0] === 'O' && board[4] === 'O' && board[8]==='O') ||
-            ( board[2] === 'O' && board[4] === 'O' && board[6]==='O')) { 
-      return 2;
-    }
-
-    else if(counter >= 8) { 
-      return 0;
-    } 
-    return -1;
+  function checkWinner(board,player) {
+      if (( board[0] === player.getChar() && board[1] === player.getChar() && board[2]===player.getChar()) ||
+          ( board[3] === player.getChar() && board[4] === player.getChar() && board[5]===player.getChar()) || 
+          ( board[6] === player.getChar() && board[7] === player.getChar() && board[8]===player.getChar()) ||
+          ( board[0] === player.getChar() && board[3] === player.getChar() && board[6]===player.getChar()) ||
+          ( board[1] === player.getChar() && board[4] === player.getChar() && board[7]===player.getChar()) ||
+          ( board[2] === player.getChar() && board[5] === player.getChar() && board[8]===player.getChar()) ||
+          ( board[0] === player.getChar() && board[4] === player.getChar() && board[8]===player.getChar()) ||
+          ( board[2] === player.getChar() && board[4] === player.getChar() && board[6]===player.getChar())) { 
+      return true;
+    } else  
+      return false;
   }
   function playWithComputer(index) {
-    
-          if(gameboard.mark(index,player1)) {
-            counter++;
-            if(endGame()) 
-              return;
-              while(true) { 
-                if(gameboard.mark(computer.playTurn(),computer)) { 
-                  counter++;
-                  endGame();
-                  break;
-                }
-          }
-          }
+    if(gameboard.mark(index,player1)) { 
+      if(endGame(player1,computer))
+        return;
+      console.log(minmax(board,computer));
+      gameboard.mark(minmax(board,computer).index,computer);
+      if(endGame(player1,computer))
+        return;
+      }
   }
   function play(index) {
     if(counter % 2 === 0) {
@@ -122,43 +100,46 @@ const game = (function () {
     }
     
   }
-    function endGame() { 
-      let winner = checkWinner();
+    function endGame(playerA,playerB) { 
+      let empty = getEmptyIndexes(board);
+      let winner = checkWinner(board,playerA)  ? 1 : checkWinner(board,playerB) ? -1 : empty.length === 0 ? 0 : null;  
       console.log(winner);
-      if(winner >= 0) {
+      if(winner === 0 || winner === -1 || winner === 1) {
         resetCounter(); 
         let template = document.querySelector('template').content;
         let container = template.querySelector('.gameOver').cloneNode(true);
-        
         let h2 = container.querySelector('h2');
         h2.textContent = 'Game Over';
         let h3 = container.querySelector('h3');
+        
         incrementScore(winner);
-        h3.textContent =  winner === 0 ? "Tie State" :
-        winner === 1 ? `${player1.getName()} has beaten ${player2.getName()}` :
-        `${player2.getName()} has beaten ${player1.getName()}`;
+        h3.textContent =  winner === -1 ? `${playerB.getName()} has beaten ${playerA.getName()}`:
+        winner === 1 ? `${playerA.getName()} has beaten ${playerB.getName()}` :
+        'Tie State';
         document.body.className = 'hide';
-        container.dataset.copy = 'true';
         document.body.appendChild(container);
-        return 1;
+        return true;
       } 
-      return;
+      return false;
   }
+
   function incrementScore(result) { 
     let player1result = document.querySelector(".result p.player1");
     let player2result = document.querySelector(".result  p.player2");
-    if(result === 2) { 
+    if(result === 1)  
       player2.wins++;
-    }
-    else if(result === 1)
-    player1.wins++;``
+    
+    else if(result === -1)
+      player1.wins++;
     player1result.textContent = `${player1.wins}`;
     player2result.textContent = `${player2.wins}`;
   }
+
   function resetCounter() { 
     counter = -1;
   }
-  return {playWithComputer,play,resetCounter};
+
+  return {playWithComputer,play,resetCounter,checkWinner};
 })();
 
 // Start Event Listeners
@@ -211,3 +192,64 @@ document.addEventListener('submit',function(e) {
     e.target.parentNode.remove();
   }
 },);
+// ai logic 
+function getEmptyIndexes(b) { 
+  return b.filter((e) => e !== 'X' && e !== 'O');
+}
+
+function minmax(currBdSt, currMark) {
+  const availCellsIndexes = getEmptyIndexes (currBdSt);
+  
+  if (game.checkWinner(currBdSt, player1)) {
+      return {score: -1};
+  } else if (game.checkWinner(currBdSt, computer)) {
+      return {score: 1};
+  } else if (availCellsIndexes.length === 0) {
+      return {score: 0};
+  }
+  
+  const allTestPlayInfos = [];
+  
+  for (let i = 0; i < availCellsIndexes.length; i++) {
+      const currentTestPlayInfo = {};
+      
+      currentTestPlayInfo.index = currBdSt[availCellsIndexes[i]];
+      
+      currBdSt[availCellsIndexes[i]] = currMark.getChar();
+      
+      if (currMark.getChar() === computer.getChar()) {
+          const result = minmax(currBdSt, player1);
+          
+          currentTestPlayInfo.score = result.score;
+      } else {
+          const result = minmax(currBdSt, computer);
+          
+          currentTestPlayInfo.score = result.score;
+      }
+      
+      currBdSt[availCellsIndexes[i]] = currentTestPlayInfo.index;
+      
+      allTestPlayInfos.push(currentTestPlayInfo);
+  }
+  
+  let bestTestPlay = null;
+  
+  if (currMark.getChar() === computer.getChar()) {
+      let bestScore = -Infinity;
+      for (let i = 0; i < allTestPlayInfos.length; i++) {
+          if (allTestPlayInfos[i].score > bestScore) {
+              bestScore = allTestPlayInfos[i].score;
+              bestTestPlay = i;
+          }
+      }
+  } else {
+      let bestScore = Infinity;
+      for (let i = 0; i < allTestPlayInfos.length; i++) {
+          if (allTestPlayInfos[i].score < bestScore) {
+              bestScore = allTestPlayInfos[i].score;
+              bestTestPlay = i;
+          }
+      }
+  }
+  return allTestPlayInfos[bestTestPlay];
+}

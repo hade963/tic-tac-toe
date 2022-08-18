@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  
+  <script> 
+    // Step 3 - Store the board’s current state in an array and define each mark's owner:
+const currentBoardState = ["X", 1, "O", "X", 4, "X", "O", "O", 8];
+const aiMark = "X";
+const humanMark = "O";
+
+// Step 4 - Create a function to get the indexes of all the empty cells:
+function getAllEmptyCellsIndexes(currBdSt) {
+    return currBdSt.filter(i => i != "O" && i != "X");
+}
+
+// Step 5 - Create a winner determiner function:
+function checkIfWinnerFound(currBdSt, currMark) {
+    if (
+        (currBdSt[0] === currMark && currBdSt[1] === currMark && currBdSt[2] === currMark) ||
+        (currBdSt[3] === currMark && currBdSt[4] === currMark && currBdSt[5] === currMark) ||
+        (currBdSt[6] === currMark && currBdSt[7] === currMark && currBdSt[8] === currMark) ||
+        (currBdSt[0] === currMark && currBdSt[3] === currMark && currBdSt[6] === currMark) ||
+        (currBdSt[1] === currMark && currBdSt[4] === currMark && currBdSt[7] === currMark) ||
+        (currBdSt[2] === currMark && currBdSt[5] === currMark && currBdSt[8] === currMark) ||
+        (currBdSt[0] === currMark && currBdSt[4] === currMark && currBdSt[8] === currMark) ||
+        (currBdSt[2] === currMark && currBdSt[4] === currMark && currBdSt[6] === currMark)
+) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+// Step 6 - Create the minimax algorithm:
+
+// Step 7 - First minimax invocation:
+const bestPlayInfo = minimax(currentBoardState, aiMark);
+console.log(bestPlayInfo);
+  </script>
+</body>
+</html>
